@@ -11,3 +11,6 @@ data/watch-history.json
 *.egg-info/
 logs/
 info/
+
+# Agent generated docs
+Docs/
