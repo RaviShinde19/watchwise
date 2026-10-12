@@ -1,5 +1,5 @@
 ﻿"""
-Airflow DAG: youtube_productivity_pipeline
+Airflow DAG: watchwise_pipeline (WatchWise)
 
 Orchestrates the full pipeline daily:
     extract >> enrich >> transform >> load >> analyze >> suggest
@@ -24,7 +24,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 default_args = {
-    "owner": "youtube_productivity_pipeline",
+    "owner": "watchwise",
     "depends_on_past": False,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
@@ -117,13 +117,13 @@ def _suggest(**context):
 
 
 with DAG(
-    dag_id="youtube_productivity_pipeline",
+    dag_id="watchwise_pipeline",
     description="ETL + API enrichment + analysis pipeline for YouTube watch history productivity insights",
     default_args=default_args,
     start_date=datetime(2024, 1, 1),
     schedule_interval="@daily",
     catchup=False,
-    tags=["youtube", "etl", "productivity", "api"],
+    tags=["watchwise", "youtube", "etl", "productivity", "api"],
 ) as dag:
 
     extract_task = PythonOperator(

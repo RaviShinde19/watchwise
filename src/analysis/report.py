@@ -1,4 +1,4 @@
-"""
+﻿"""
 Stage 4: ANALYSIS / REPORT
 Parses sql/analysis_queries.sql (each query prefixed with `-- name: <label>`),
 runs each one against Postgres, and prints/saves a human-readable insights report.
@@ -45,7 +45,7 @@ def run_all_queries(sqlalchemy_uri: str, sql_path: Path) -> dict:
 
 def print_report(results: dict):
     print("\n" + "=" * 70)
-    print("YOUTUBE PRODUCTIVITY ANALYZER -- INSIGHTS REPORT")
+    print("WATCHWISE -- PRODUCTIVITY & HABIT INSIGHTS REPORT")
     print("=" * 70)
 
     if "overall_summary" in results and not results["overall_summary"].empty:
@@ -104,3 +104,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

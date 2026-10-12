@@ -1,37 +1,40 @@
-# 📺 YouTube Productivity Analyzer Pipeline
+﻿# 🦉 WatchWise — YouTube Productivity & Habit Analytics
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Apache Airflow](https://img.shields.io/badge/Apache_Airflow-2.8-blue?style=for-the-badge&logo=apache-airflow&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2.2-blue?style=for-the-badge&logo=pandas&logoColor=white)
+![YouTube API](https://img.shields.io/badge/YouTube_API-v3-red?style=for-the-badge&logo=youtube&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker&logoColor=white)
 
-An automated, end-to-end **Batch ETL Pipeline** that extracts YouTube watch history (Google Takeout JSON), cleans and enriches it using Pandas, and loads it into a PostgreSQL data warehouse to surface behavioral insights (peak hours, productivity ratios, and binge-watching patterns).
+**WatchWise** is an automated, end-to-end **Batch ETL Data Pipeline** that transforms raw YouTube watch history into actionable productivity analytics. It enriches raw export logs with official metadata from the **YouTube Data API v3** (accurate ISO-8601 durations & categories), models the data into a **PostgreSQL Star Schema**, and surfaces deep behavioral patterns (peak hours, productive vs. distracting ratios, binge-watching streaks, and weekday trends).
 
 ---
 
-## 🏗️ Engineering Highlights
+## ⚡ Engineering Highlights
 
-This project was built with production-grade data engineering principles in mind:
-- **Idempotent Incremental Loading:** Uses a staging-table pattern and `ON CONFLICT DO NOTHING` upsert semantics, allowing the pipeline to safely re-run on full-extract JSON files without data duplication.
-- **Data Integrity & Modeling:** Modeled as a **Star Schema** enforcing 28 distinct data integrity constraints (NOT NULL, CHECK, UNIQUE, FK) to eliminate downstream quality issues.
-- **Feature Engineering:** Derived 9 analytical dimensions from 7 messy raw JSON fields (timestamp decomposition, binge-session assignment, 100% coverage productivity classification).
-- **Automated Insight Generation:** Designed 6 analytical SQL queries leveraging advanced features like `FILTER`, window functions, and `STRING_AGG` to replace manual Excel workflows.
+- **External API Metadata Enrichment:** Integrates Google's **YouTube Data API v3** to replace rough time estimates with exact video durations and official category classifications. Employs 50-item batching, persistent JSON caching, and graceful offline fallback.
+- **Idempotent Incremental Loading:** Implements a staging-table pattern with `ON CONFLICT DO NOTHING` upsert semantics, ensuring safe, duplicate-free re-runs on periodic full-export Takeout files.
+- **Production Star Schema:** Modeled with 28 distinct relational integrity constraints (NOT NULL, CHECK, UNIQUE, Foreign Keys) across dimension and fact tables.
+- **Robust Feature Engineering:** Derives 9 analytical dimensions from messy raw JSON fields (timestamp decomposition, binge-session assignment, keyword + API hybrid productivity classification).
+- **Automated Insights & Suggestions:** 6 analytical SQL queries leveraging window functions, `FILTER`, and `STRING_AGG`, backed by a rule-based suggestion engine tracking behavioral changes over time.
+- **Comprehensive Test Suite:** 35 unit and integration tests covering extraction, API batching, caching, transformations, and error handling.
 
 ---
 
-## 🏛️ Architecture Workflow
+## 🏗️ Architecture Workflow
 
 ```mermaid
 flowchart LR
-    A[(fa:fa-file-code Raw JSON\nGoogle Takeout)] -->|Extract| B(fa:fa-python Pandas\nTransform & Clean)
+    A[(fa:fa-file-code Raw JSON\nGoogle Takeout)] -->|Extract| B(fa:fa-cloud YouTube Data API v3\nBatch Enrich & Cache)
+    B -->|Transform| C(fa:fa-python Pandas\nClean & Feature Eng)
     
     subgraph Data Warehouse
-        B -->|Staging Upsert| C[(fa:fa-database PostgreSQL\nStar Schema)]
+        C -->|Staging Upsert| D[(fa:fa-database PostgreSQL\nStar Schema)]
     end
     
-    C -->|Analyze| D{{fa:fa-chart-pie Analytics\nQueries & Metrics}}
-    C -->|Suggest| E{{fa:fa-lightbulb Rule-Based\nInsights Engine}}
+    D -->|Analyze| E{{fa:fa-chart-pie Analytics\nQueries & Metrics}}
+    D -->|Suggest| F{{fa:fa-lightbulb Rule-Based\nInsights Engine}}
     
     classDef file fill:#f9f,stroke:#333,stroke-width:2px;
     classDef process fill:#bbf,stroke:#333,stroke-width:2px;
@@ -39,38 +42,43 @@ flowchart LR
     classDef output fill:#fbb,stroke:#333,stroke-width:2px;
     
     class A file;
-    class B process;
-    class C db;
-    class D,E output;
+    class B,C process;
+    class D db;
+    class E,F output;
 ```
 
-All stages are orchestrated as a DAG using **Apache Airflow**, but can also be run as a standalone Python pipeline for local development.
+All stages are orchestrated as a DAG using **Apache Airflow**, but can also be executed standalone via Python for local development and testing.
 
 ---
 
-## 🚀 1. Getting your real data
+## 📥 1. Getting Your Data
 
 > [!TIP]
 > **No data yet? No problem!** 
-> You can run `python src/generate_sample_data.py` to create a realistic synthetic `watch-history.json` and test the pipeline immediately.
+> Run `python src/generate_sample_data.py` to create a realistic synthetic `watch-history.json` and test the pipeline immediately.
 
-To use your own data, Google Takeout lets you export your actual YouTube watch history:
-1. Go to `takeout.google.com`
+To use your real data from Google Takeout:
+1. Go to [takeout.google.com](https://takeout.google.com)
 2. Select **YouTube and YouTube Music**
-3. Export as **JSON**
-4. Drop the resulting `watch-history.json` file into `data/watch-history.json`.
+3. Choose **JSON** as the export format
+4. Place the resulting `watch-history.json` file in `data/watch-history.json`.
 
 ---
 
-## ⚙️ 2. Local Setup (No Airflow)
+## 🚀 2. Local Setup (Standalone Pipeline)
 
 ```bash
-cd youtube_productivity_pipeline
+# Clone and enter the repository
+git clone https://github.com/RaviShinde19/watchwise.git
+cd watchwise
+
+# Set up virtual environment
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
+source venv/bin/activate          # Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
 
-cp .env.example .env               # Edit .env with your Postgres credentials
+# Configure environment variables
+cp .env.example .env               # Fill in PostgreSQL credentials & optional YouTube API key
 ```
 
 Create the database and schema:
@@ -80,22 +88,27 @@ createdb youtube_analytics
 psql youtube_analytics -f sql/schema.sql
 ```
 
-Run the standalone pipeline:
+Run the pipeline:
 ```bash
-# Extract -> Enrich -> Transform -> Load -> Analyze -> Suggest
+# Extract -> Enrich (API) -> Transform -> Load -> Analyze -> Suggest
 python -m src.etl.pipeline
+```
+
+Run the test suite:
+```bash
+python -m pytest
 ```
 
 ---
 
-## 🌬️ 3. Run it with Airflow
+## ⏰ 3. Orchestration with Apache Airflow
 
 ```bash
 export AIRFLOW_HOME=$(pwd)/airflow_home
 airflow db init
 airflow users create --username admin --password admin --firstname A --lastname D --role Admin --email admin@example.com
 
-# Link Airflow to this project's dags/ folder
+# Link DAG folder
 mkdir -p $AIRFLOW_HOME/dags
 ln -s $(pwd)/dags/youtube_productivity_dag.py $AIRFLOW_HOME/dags/
 
@@ -104,7 +117,7 @@ airflow scheduler &
 ```
 
 > [!NOTE]
-> Open `http://localhost:8080` in your browser, un-pause the `youtube_productivity_pipeline` DAG, and trigger it. It will run daily (`@daily`) by default.
+> Open `http://localhost:8080` in your browser, unpause the `watchwise_pipeline` DAG, and trigger it. It runs daily (`@daily`) by default.
 
 ---
 
@@ -118,20 +131,20 @@ airflow scheduler &
 | **Binge sessions** | `binge_sessions` | Sequences of 3+ videos watched with <10 min gaps |
 | **Top channels** | `top_channels` | Most-watched channels by total watch count |
 
-*(All queries live in `sql/analysis_queries.sql` and are executed from `src/analysis/report.py`)*
+*(Queries are defined in `sql/analysis_queries.sql` and executed via `src/analysis/report.py`)*
 
 ---
 
-## 🧠 5. Suggestion Engine (Rule-Based Insights)
+## 💡 5. Insight & Suggestion Engine
 
-`src/analysis/suggestions.py` reads query results and applies independent rules. There is no ML involved; every suggestion is 100% explainable by the numbers.
+`src/analysis/suggestions.py` evaluates query results against explainable productivity rules:
 
 | Rule | Fires when... |
 |---|---|
 | `low_overall_productivity` | All-time productive-content share is below 25% |
 | `late_night_peak_usage` | Peak usage hour falls in a late-night window (21:00-02:00) |
-| `binge_session_detected` | A session has 5+ videos back-to-back |
+| `binge_session_detected` | A session has 5+ videos watched back-to-back |
 | `weekend_activity_gap` | Weekend watch time is under 20% of total |
 | `productivity_trend_declining` | Last-7-day avg productive % drops 10+ points vs. prior 7 days |
 
-*(Suggestions are persisted to an append-only `insights_suggestions` log in PostgreSQL so you can track behavioral changes over time).*
+Suggestions are persisted to an append-only `insights_suggestions` table in PostgreSQL to track behavioral improvements over time.

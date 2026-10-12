@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- Analytical queries for the YouTube Productivity Analyzer.
+-- Analytical queries for WatchWise (YouTube Productivity & Habit Analytics).
 -- Each query is labeled with a name comment so report.py can parse and run
 -- them individually by name (see parse_named_queries in src/analysis/report.py).
 -- ============================================================================
@@ -111,3 +111,4 @@ FROM fact_watch_events
 WHERE api_enriched = true AND youtube_category_name IS NOT NULL
 GROUP BY youtube_category_name, productivity_category
 ORDER BY total_minutes DESC;
+

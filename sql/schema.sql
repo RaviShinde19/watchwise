@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- YouTube Productivity Analyzer -- PostgreSQL schema
+-- WatchWise -- PostgreSQL schema
 -- Run with: psql youtube_analytics -f sql/schema.sql
 -- ============================================================================
 
@@ -123,3 +123,4 @@ BEGIN
     END IF;
 END
 $$;
+
